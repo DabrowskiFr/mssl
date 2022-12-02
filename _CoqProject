@@ -1,0 +1,7 @@
+-R theories/ MSSL
+-arg "-w all"
+theories/Monoid.v
+theories/Functor.v
+theories/Value.v
+theories/Syntax.v
+theories/Semantics.v        
