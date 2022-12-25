@@ -1,3 +1,19 @@
+Require Import Coq.Classes.RelationClasses.
+Require Import Coq.Sets.Ensembles.
+
+#[export] Instance IncludedRef (A : Type): Reflexive (Included A).
+Proof.
+    intro.
+    unfold Included; auto.
+Qed.
+
+#[export] Instance IndludedTrans (A : Type) : Transitive (Included A).
+Proof.
+    intro.
+    unfold Included; auto.
+Qed.
+
+(*
 Module Option_as_OT (T : OrderedType): OrderedType.
 
 Definition t := option T.t.
@@ -35,3 +51,5 @@ Qed.
 Lemma eq_dec : forall x y, { eq x y } + { ~ eq x y }.
 Admitted.
 End Option_as_OT.
+
+*)

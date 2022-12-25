@@ -15,24 +15,18 @@
     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.    *)
 (************************************************************************)
 
-(** * Monoids *)
+(** * Monoid examples *)
 
-Require Import List.
+    Require Import List Monoid.
 Import ListNotations.
-
-Set Universe Polymorphism.
-
-Class Monoid (A : Type) :=
-  {
-    mempty : A;
-    mappend : A -> A -> A;
-    
-    monoid_left_id  : forall a, mappend mempty a = a;
-    monoid_right_id : forall a, mappend a mempty = a;
-    monoid_assoc    : forall a b c, mappend a (mappend b c) = mappend (mappend a b) c
-  }.
-
-Class CommutativeMonoid (A : Type) `(E : Monoid A) :=
-  {
-    monoid_commute : forall a b, mappend a b = mappend b a
-  }.
+ 
+ #[export] Instance ListMonoid (A : Type) : Monoid (list A) :=
+ {
+     mempty := [];
+     mappend := @List.app A  ;
+     monoid_left_id := @app_nil_l A;
+     monoid_right_id := @app_nil_r A ;
+     monoid_assoc := @app_assoc A
+ }.
+ 
+ 

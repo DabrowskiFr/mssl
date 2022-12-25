@@ -15,24 +15,27 @@
     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.    *)
 (************************************************************************)
 
-(** * Monoids *)
+Require Import Monoid.
 
-Require Import List.
-Import ListNotations.
+(** * Labelled transition *)
 
-Set Universe Polymorphism.
+Section Transition.
 
-Class Monoid (A : Type) :=
-  {
-    mempty : A;
-    mappend : A -> A -> A;
-    
-    monoid_left_id  : forall a, mappend mempty a = a;
-    monoid_right_id : forall a, mappend a mempty = a;
-    monoid_assoc    : forall a b c, mappend a (mappend b c) = mappend (mappend a b) c
-  }.
+Variable A B : Type.
 
-Class CommutativeMonoid (A : Type) `(E : Monoid A) :=
-  {
-    monoid_commute : forall a b, mappend a b = mappend b a
-  }.
+(** A labelled transition system is a pair [(A, T)] where [T : A -> B -> A -> Prop] 
+for some set of actions [B] *)
+
+Definition transition := A -> B -> A -> Prop.
+
+(** If B is a monoid, we can define the reachability relation of the transition system *)
+
+Inductive reachable {MB : Monoid B} (T : transition) : transition :=   
+| reachable_step : forall x y z,
+    T x y z -> reachable T x y z
+| reachable_refl : forall a,
+        reachable T a mempty a
+| reachable_trans : forall x a y b z,
+    reachable T x a y -> T y b z -> reachable  T x (mappend a b) z.
+
+End Transition.

@@ -1,64 +1,46 @@
+Require Import Variables Value Lifetime LVal.
+
 Open Scope type_scope.
-Require Import Value.
-Require Import String.
-Require Import OrderedType.
 
-Module Type BoundedOrderedType <: OrderedType.OrderedType.
-    Include OrderedType.OrderedType.
-    Parameter glob : t.
-    Axiom least_elt : forall x : t, lt glob x.
-End BoundedOrderedType.
+Module MSSLSyntax.
 
-Module MSSLSyntax(Lifetime : BoundedOrderedType).
+    Inductive sem : Set := Copy | Move.
 
-Module Import V := Value(Lifetime).
+    Inductive expression : Type :=
+        | EVal : Value.value -> expression  
+        | EVar : Var.t -> expression 
+        | ERead : sem -> lval -> expression 
+        | ESeq : expression -> expression -> expression
+        | EBlock : expression -> Lifetime.t -> expression
+        | EBinding : Var.t -> expression -> expression
+        | EBox : expression -> expression
+        | ERef : bool -> lval -> expression 
+        | EAssign : lval -> expression -> expression
+        | ETrc : expression -> expression
+        | EClone : lval -> expression
+        | ESpawn : Var.t -> list expression -> expression
+        | ECooperate : expression.
 
-Inductive type : Set := 
-    | UnitType : type 
-    | IntType : type
-    | RefType : bool -> list lval -> type
-    | TrcCloneType : list lval -> type 
-    | TrcType : type -> type 
-    | BoxType : type -> type.
+    Inductive signature : Set :=
+        | SUnit : signature
+        | SInt : signature
+        | STrc : signature -> signature  
+        | SBox : signature -> signature.
 
-Inductive sem : Set := Copy | Move.
+    Record method : Type := Mtd {
+        params : list (Var.t * signature);
+        rtype : signature;
+        body : expression;
+        m_lft : Lifetime.t
+    }.
 
-Inductive expression : Type :=
-    | EVal : value -> expression  
-    | EVar : variable -> expression 
-    | ERead : sem -> lval -> expression 
-    | ESeq : expression -> expression -> expression
-    | EBlock : expression -> Lifetime.t -> expression
-    | EBinding : variable -> expression -> expression
-    | EBox : expression -> expression
-    | ERef : bool -> lval -> expression 
-    | EAssign : lval -> expression -> expression
-    | ETrc : expression -> expression
-    | EClone : lval -> expression
-    | ESpawn : string -> list expression -> expression
-    | ECooperate : expression.
+    Record program : Type := Prg {
+        functions : Var.t -> option method;
+        main : expression;
+        p_lft : Lifetime.t
+    }.
 
-Inductive signature : Set :=
-    | SUnit : signature
-    | SInt : signature
-    | STrc : signature -> signature  
-    | SBox : signature -> signature.
-
-Record method : Type := Mtd {
-    params : list (string * signature);
-    rtype : signature;
-    body : expression;
-    m_lft : Lifetime.t
-}.
-
-Record program : Type := Prg {
-    functions : string -> option method;
-    main : expression;
-    p_lft : Lifetime.t
-}.
-
-
-End MSSLSyntax.
+End MSSLSyntax. 
 
 
 

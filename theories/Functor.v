@@ -1,5 +1,5 @@
 (************************************************************************)
-(* Copyright 2018 Frédéric Dabrowski                                    *)
+(* Copyright 2022 Frédéric Dabrowski                                    *)
 (* 
     This program is free software:: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
     along with Foobar.  If not, see <https://www.gnu.org/licenses/>.    *)
 (************************************************************************)
 
-Require Import Utf8.
 Require Import Program.Basics.
+
+Set Universe Polymorphism.
 
 Open Scope program_scope.
 
@@ -32,16 +33,16 @@ Class Functor (f : Type -> Type) : Type :=
 
 Class Applicative (f : Type -> Type) `(E : Functor f)  : Type :=
   {
-    pure : ∀ {A : Type}, A -> f A;
-    ap : ∀ {A B : Type}, f (A -> B) -> f A -> f B;
-    applicative_identity : ∀ {A : Type} (x : f A), ap (pure id) x = x;
-    applicative_compose : ∀ {A B C : Type} (u : f (B -> C)) (v : f (A -> B)) (w : f A),
+    pure : forall {A : Type}, A -> f A;
+    ap : forall {A B : Type}, f (A -> B) -> f A -> f B;
+    applicative_identity : forall {A : Type} (x : f A), ap (pure id) x = x;
+    applicative_compose : forall {A B C : Type} (u : f (B -> C)) (v : f (A -> B)) (w : f A),
         ap (ap (ap (pure compose) u) v) w = ap u (ap v w);
     applicative_homomorphism :
-      ∀ {A B : Type} (f : A -> B) (x : A), ap (pure f) (pure x) = pure (f x);
+      forall {A B : Type} (f : A -> B) (x : A), ap (pure f) (pure x) = pure (f x);
     applicative_interchange :
-      ∀ {A B : Type} (u : f ( A -> B)) ( y : A), ap u (pure y) = ap (pure ($ y)) u;
-    applicative_fmap : ∀ {A B : Type} (f : A -> B), fmap f  = ap (pure f)
+      forall {A B : Type} (u : f ( A -> B)) ( y : A), ap u (pure y) = ap (pure ($ y)) u;
+    applicative_fmap : forall {A B : Type} (f : A -> B), fmap f  = ap (pure f)
   }.
 
 (*Arguments fmap {f _ a b} g x.*)

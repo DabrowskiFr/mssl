@@ -1,7 +1,17 @@
 -R theories/ MSSL
 -arg "-w all"
+theories/Misc.v
+theories/Lattice.v
 theories/Monoid.v
+theories/MonoidExamples.v
+theories/Monad.v
 theories/Functor.v
-theories/Value.v
+theories/Transition.v
+theories/Variables.v
+theories/Lifetime.v
+theories/LVal.v
 theories/Syntax.v
-theories/Semantics.v        
+theories/Value.v
+theories/Store.v
+theories/Semantics.v
+theories/Types.v

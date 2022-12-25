@@ -1,0 +1,9 @@
+theories/*.glob
+theories/*.aux
+theories/*.vo
+theories/*.vok
+theories/*.vos
+.CoqMakefile.d
+.DS_Store
+CoqMakefile.conf
+html
