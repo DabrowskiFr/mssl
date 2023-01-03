@@ -1,3 +1,4 @@
+Makefile.conf
 theories/*.glob
 theories/*.aux
 theories/*.vo

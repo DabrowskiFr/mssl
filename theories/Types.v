@@ -23,15 +23,21 @@ Open Scope program_scope.
         | TMoved : total -> moved
         | TMBox : moved -> moved.
     
-    Definition partial : Type := sum total moved.
+    Notation "⟙" := (@None (sum total moved)).
 
-    Definition lift_total : total -> partial := (@inl total moved).
-    Definition lift_moved : moved -> partial := (@inr total moved).
+    Definition partial : Type := option (sum total moved).
+
+    Definition lift_total : total -> partial := 
+        fun x => (Some (@inl total moved x)).
+
+    Definition lift_moved : moved -> partial := 
+        fun x => (Some (@inr total moved x)).
 
     Coercion lift_total : total >-> partial.
     Coercion lift_moved : moved >-> partial.
 
     Inductive lt : relation partial := 
+        | lt_top : forall t, lt t ⟙
         | lt_unit : lt TUnit TUnit
         | lt_int : lt TInt TInt
         | lt_ref : forall b l1 l2,
@@ -59,7 +65,7 @@ Proof.
     dependent induction Ha.
 Qed.
 
-Lemma lt_moved : forall (t1 t2 : total), lt (inl t1) (TMoved t2) -> lt t1 t2.
+Lemma lt_moved : forall (t1 t2 : total), lt t1 (TMoved t2) -> lt t1 t2.
 Proof.
     intros t1 t2 Ha.
     dependent induction Ha; auto using lt_box1, JMeq_refl.
@@ -69,74 +75,81 @@ Lemma lt_refl : forall t, lt t t.
 Proof.
     assert (forall t : total, lt t t) as Ha by
         (induction t; auto using lt, reflexivity).
-    destruct t; [apply Ha | induction m; auto using lt]. 
+    destruct t; [ | apply lt_top].
+    destruct s; [apply Ha | induction m; eauto using lt].
 Qed.
 
 Lemma lt_trans : forall t1 t2, lt t1 t2 -> forall t3, lt t2 t3 -> lt t1 t3.
 Proof.
-    intros t1 t2 Ha.
+    intros t1 t2 Ha .
     dependent induction Ha; intros t3 Hb.
+    -   inversion Hb; subst; apply lt_top.
     -   assumption.
     -   assumption.
-    -   destruct t3 as [ [  ] | [ t |  ] ]; try solve [inversion Hb].
+    -   destruct t3 as [ [ ] | ].
         +   inversion Hb; subst.
             eauto using lt_ref, transitivity.
         +   dependent destruction Hb.
-            destruct t; try solve [inversion Hb].
+            destruct t2; try solve [inversion Hb].
             inversion Hb; subst.
             apply lt_undef2.
             eauto using lt_ref, transitivity.
-    -   destruct t3 as [ [  ] | [ t |  ] ]; try solve [inversion Hb].
+        +   apply lt_top.
+    -   destruct t3 as [ [  ] | ].
         +   inversion Hb; subst.
-            *   apply lt_trc.
-                apply IHHa.
-                assumption.
+            apply lt_trc.
+            now apply IHHa.
         +   dependent destruction Hb.
-            destruct t; try solve [inversion Hb].
+            destruct t3; try solve [inversion Hb].
             inversion Hb; subst.
             apply lt_undef2.
-            apply lt_trc; apply IHHa; assumption.
-    -   destruct t3 as [ [  ] | [ t |  ] ]; try solve [inversion Hb].
+            apply lt_trc.
+            now apply IHHa.
+        +   apply lt_top.
+    -   destruct t3 as [[ |  ] | ].
         +   inversion Hb; subst.
-            apply lt_box1; apply IHHa; assumption.
+            apply lt_box1.
+            now apply IHHa; assumption.
         +   dependent destruction Hb.
-            destruct t; try solve [inversion Hb].
-            inversion Hb; subst.
-            apply lt_undef2.
-            apply lt_box1; apply IHHa; assumption. 
-            * apply lt_undef2.
+            *   apply lt_box2.
+                now apply IHHa.
+            *   destruct t3; try solve [inversion Hb].
+                inversion Hb; subst.
+                apply lt_undef2.
                 apply lt_box1.
-                apply IHHa.
+                now apply IHHa.
+            *   apply lt_undef2.
+                apply lt_box1.
                 apply lt_moved.
-                assumption.
+                now apply IHHa.
+        +   apply lt_top.
+    -   destruct t3 as [ [] |  ]; try solve [inversion Hb].
         +   inversion Hb; subst.
-            apply lt_box2.
-            apply IHHa; assumption.
-    -   destruct t3 as [ [  ] | [ t |  ] ]; try solve [inversion Hb].
-        +   destruct t; try solve [inversion Hb].
-            inversion Hb; subst.
-            apply lt_undef3.
-            apply IHHa; assumption.
-        +   apply lt_box2.
-            inversion Hb; subst.
-            apply IHHa; assumption.
-    -   destruct t3 as [ [  ] | [ t |  ] ]; try solve [inversion Hb].
-        +   destruct t; try solve [inversion Hb].
-            inversion Hb; subst.
-            apply lt_undef4.
-            apply IHHa; assumption.
-        +   apply lt_box3.
-            inversion Hb; subst.
-            apply IHHa; assumption.
-    -   destruct t3; [elim (lt_moved_total _ _ Hb) | ].
+            *   apply lt_box2.
+                now apply IHHa.
+            *   apply lt_undef3.
+                now apply IHHa.
+        +   apply lt_top.   
+    -   destruct t3 as [ [  ] | ]; try solve [inversion Hb].
+        +   inversion Hb; subst.
+            *   apply lt_box3.
+                now apply IHHa.
+            *   apply lt_undef4.
+                now apply IHHa. 
+        +   apply lt_top.   
+    -   destruct t3.
+        destruct s; [elim (lt_moved_total _ _ Hb) | ].
         inversion Hb; subst.
-        apply lt_undef1.
-        apply IHHa; assumption. 
-    -   destruct t3; [elim (lt_moved_total _ _ Hb) | ].
+        +   apply lt_undef1.
+            now apply IHHa.
+        +   apply lt_top. 
+    -   destruct t3; [ | apply lt_top ].
+        destruct s; [elim (lt_moved_total _ _ Hb) | ].
         inversion Hb; subst.
         apply lt_undef2.
-        apply IHHa; assumption.
-    -   destruct t3; [elim (lt_moved_total _ _ Hb) | ].
+        now apply IHHa.
+    -   destruct t3; [ | apply lt_top].
+        destruct s; [elim (lt_moved_total _ _ Hb) | ].
         inversion Hb; subst.
         destruct t3; (try inversion H1).
         subst.
@@ -144,11 +157,11 @@ Proof.
         apply lt_box1.
         apply lt_moved.
         apply IHHa.
-        constructor.
-        assumption.
-    -   destruct t3 ; [elim (lt_moved_total _ _ Hb) | ].
+        now apply lt_undef1.
+    -   destruct t3; [ | apply lt_top].
+        destruct s ; [elim (lt_moved_total _ _ Hb) | ].
         inversion Hb; subst.
-        destruct t3; (try inversion H1;subst).
+        destruct t3; (try inversion H1; subst).
         apply lt_undef4.
         apply IHHa.
         apply lt_undef1; assumption.
@@ -190,59 +203,44 @@ Qed.
 Lemma lt_antisymmetric : forall (t1 t2 : partial), lt t1 t2 -> lt t2 t1 -> t1 = t2.
 Proof.
     intros t1 t2 Ha Hb.
-    destruct t1, t2.
-    -   f_equal.
-        apply lt_antisymmetric_total.
-        assumption.
-        assumption.
-    -   apply lt_moved_total in Hb.
-        elim Hb.
-    -   apply lt_moved_total in Ha.
-        elim Ha.
-    -   f_equal.
-        apply lt_antisymmetric_moved.
-        assumption.
-        assumption.
+    destruct t1 as [ [] | ], t2 as [ [] | ]; 
+        try solve [inversion Ha | inversion Hb].
+    -   repeat f_equal.
+        now apply lt_antisymmetric_total.
+    -   repeat f_equal.
+        now apply lt_antisymmetric_moved.
+    -   reflexivity.
 Qed.
 
-Definition lt' (t1 t2 : option partial) : Prop :=
-    match (t1, t2) with
-        |   (Some t1, Some t2) => lt t1 t2
-        |   (None, _ ) => True 
-        |   (Some _, None ) => False
-    end.
-
-#[export] Instance lt_Reflexive : Reflexive lt'.
+#[export] Instance lt_Reflexive : Reflexive lt.
 Proof.
-    intro x.
-    destruct x; unfold lt'; auto using lt_refl.
+    exact lt_refl.
 Qed.
 
-#[export] Instance lt_Transitive : Transitive lt'.
+#[export] Instance lt_Transitive : Transitive lt.
 Proof.
-    intros x y z H1 H2.
-    destruct x, y, z; unfold lt' in *; eauto using lt_trans.
-    elim H1.
+    intros x y z Ha Hb.
+    eapply lt_trans; eauto.
 Qed.
 
-#[export] Instance lt_AntiSymmetric : Antisymmetric _ (@eq (option partial)) lt'.
+#[export] Instance lt_AntiSymmetric : Antisymmetric _ (@eq (partial)) lt.
 Proof.
     intros x y Ha Hb.
     destruct x, y.
-    f_equal.
     now apply lt_antisymmetric.
     inversion Ha.
     inversion Hb.
+    inversion Ha.
     reflexivity.
 Qed.
 
-#[export] Instance typePreorder : PreOrder lt'.
+#[export] Instance typePreorder : PreOrder lt.
 constructor.
 apply lt_Reflexive.
 apply lt_Transitive.
 Qed.
 
-#[export] Instance PartialOrderlt : PartialOrder eq lt'.
+#[export] Instance PartialOrderlt : PartialOrder eq lt.
 constructor.
 -   intro.
     unfold relation_conjunction.
@@ -255,24 +253,23 @@ constructor.
 -   unfold relation_conjunction.
     unfold predicate_intersection.
     unfold pointwise_extension.
-    unfold lt'.
     intros [Ha Hb].
     unfold flip in Hb.
     destruct x, x0.
-    f_equal.
-    apply lt_antisymmetric.
-    assumption.
-    assumption.
-    elim Ha.
-    elim Hb.
-    reflexivity.
+    + apply lt_antisymmetric.
+        assumption.
+        assumption.
+    + inversion Hb.
+    + inversion Ha.   
+    + reflexivity.
 Qed.
 
-Fixpoint type_join (t1 t2 : option partial) : option partial := 
+Fixpoint type_join (t1 t2 : partial) : partial := 
     match t1, t2 with 
-        | _,_ => None 
+        | _,_ => ⟙
     end.
 
-#[export] Instance typeJoinLattice : JoinLattice (@eq (option partial)) lt' type_join.
+
+#[export] Instance typeJoinLattice : JoinLattice (@eq partial) lt type_join.
 Admitted.
 
